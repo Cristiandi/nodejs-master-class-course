@@ -8,13 +8,15 @@ const environments = {};
 
 // staging (default) object
 environments.staging = {
-    port: 3000,
+    httpPort: 3000,
+    httpsPort: 3001,
     envName: 'staging'
 };
 
 // production object
 environments.production = {
-    port: 3001,
+    httpPort: 4000,
+    httpsPort: 4001,
     envName: 'production'
 };
 

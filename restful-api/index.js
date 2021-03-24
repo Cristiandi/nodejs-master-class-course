@@ -5,11 +5,32 @@
 // Dependencies
 const config = require('./config');
 const http = require('http');
+const https = require('https');
 const StringDecoder = require('string_decoder').StringDecoder;
+const fs = require('fs');
 
-const server = http.createServer(async (req, res) => {
+// define the handlers
+const handlers = {};
+
+// ping router
+handlers.ping = (data, callback) => {
+    callback(200);
+};
+
+// not found handler
+handlers.notFound = (data, callback) => {
+    callback(404);
+};
+
+// define a request router
+const router = {
+    ping: handlers.ping
+};
+
+// all the server logic
+const unifiedServer = async (req, res, httpString = 'http') => {
     // get the url n parse it
-    const baseURL = 'http://' + req.headers.host + '/';
+    const baseURL = httpString + '://' + req.headers.host + '/';
 
     const parsedUrl = new URL(req.url, baseURL);
 
@@ -77,27 +98,29 @@ const server = http.createServer(async (req, res) => {
         // log
         console.log('returning this:', statusCode, payloadString);
     });
-});
-
-// Start the server and have it listen on port 300
-server.listen(config.port, () => {
-    console.log(`Ther server is on ${config.port} port at ${config.envName}.`);
-});
-
-// define the handlers
-const handlers = {};
-
-// sample handler
-handlers.sample = (data, callback) => {
-    callback(406, { name: 'sample handler' });
-}; 
-
-// not found handler
-handlers.notFound = (data, callback) => {
-    callback(404);
 };
 
-// define a request router
-const router = {
-    sample: handlers.sample
-};
+// instantiate the http server
+const httpServer = http.createServer((req, res) => {
+    unifiedServer(req, res, 'http');
+});
+
+// start the http server
+httpServer.listen(config.httpPort, () => {
+    console.log(`Ther server is on ${config.httpPort} port at ${config.envName}.`);
+});
+
+// instantiate the https server
+const httpsServer = https.createServer(
+{
+    key: fs.readFileSync('./https/key.pem'),
+    cert: fs.readFileSync('./https/cert.pem')
+},
+async (req, res) => {
+    unifiedServer(req, res, 'https');
+});
+
+// start the https server
+httpsServer.listen(config.httpsPort, () => {
+    console.log(`Ther server is on ${config.httpsPort} port at ${config.envName}.`);
+});
