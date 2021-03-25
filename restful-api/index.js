@@ -9,12 +9,22 @@ const https = require('https');
 const StringDecoder = require('string_decoder').StringDecoder;
 const fs = require('fs');
 
+const _data = require('./lib/data');    
+
 // define the handlers
 const handlers = {};
 
 // ping router
 handlers.ping = (data, callback) => {
     callback(200);
+};
+
+handlers.hello = (data, callback) => {
+    const response = {
+        message: 'Hello dude!'
+    };
+
+    callback(200, response);
 };
 
 // not found handler
@@ -24,7 +34,8 @@ handlers.notFound = (data, callback) => {
 
 // define a request router
 const router = {
-    ping: handlers.ping
+    ping: handlers.ping,
+    hello: handlers.hello
 };
 
 // all the server logic
