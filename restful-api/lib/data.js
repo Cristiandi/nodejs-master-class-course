@@ -6,6 +6,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const helpers = require('./helpers');
+
 // container for the module
 const lib = {};
 
@@ -30,9 +32,15 @@ lib.create = (dir, file, data) => {
 
 // read data from a file
 lib.read = (dir, file) => {
-    const fileContent = fs.readFileSync(lib.baseDir + '/' + dir + '/' + file + '.json', 'utf-8');
+    try {
+        const fileContent = fs.readFileSync(lib.baseDir + '/' + dir + '/' + file + '.json', 'utf-8');
 
-    return fileContent;
+        return helpers.parseJsonToObject(fileContent);    
+    } catch (error) {
+        console.error(error);
+
+        return null;
+    }
 };
 
 // update data in a file
