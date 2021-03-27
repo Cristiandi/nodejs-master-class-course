@@ -107,7 +107,6 @@ handlers._users.post = async (data, callback) => {
 // users - get
 // requiered data: phone
 // optional deta: none
-// TODO: just let auth users
 handlers._users.get = async (data, callback) => {
     try {
         const phone = typeof data?.queryStringObject.get('phone') === 'string' && data?.queryStringObject.get('phone').trim().length === 10 ?
@@ -115,6 +114,16 @@ handlers._users.get = async (data, callback) => {
 
         if (!phone) {
             return callback(400, { message: 'missing required fields.' });
+        }
+
+        // get the token from headers
+        const tokenId = data.headers.token;
+
+        // verify the token
+        const token = handlers._tokens.verifyToken(tokenId, phone);
+
+        if (!token) {
+            return callback(403, { message: 'missing token or token is invalid.' });
         }
 
         const user = _data.read('users', phone);
@@ -134,7 +143,6 @@ handlers._users.get = async (data, callback) => {
 // users - put
 // requiered data: phone
 // optional data: firstName, lastName, password, tosAgreement (at least one)
-// TODO: just for auth users
 handlers._users.put = async (data, callback) => {
     try {
         const phone = typeof data?.payload?.phone === 'string' && data?.payload?.phone.trim().length === 10 ?
@@ -151,6 +159,16 @@ handlers._users.put = async (data, callback) => {
 
         if (!phone) {
             return callback(400, { message: 'missing required fields.' });
+        }
+
+        // get the token from headers
+        const tokenId = data.headers.token;
+
+        // verify the token
+        const token = handlers._tokens.verifyToken(tokenId, phone);
+
+        if (!token) {
+            return callback(403, { message: 'missing token or token is invalid.' });
         }
 
         if (!firstName && !lastName && !password) {
@@ -181,12 +199,25 @@ handlers._users.put = async (data, callback) => {
 
 // users - delete
 // requiered data: phone
-// optional deta: none
-// TODO: just let auth users
+// optional data: none
 handlers._users.delete = async (data, callback) => {
     try {
         const phone = typeof data?.queryStringObject.get('phone') === 'string' && data?.queryStringObject.get('phone').trim().length === 10 ?
             data?.queryStringObject.get('phone') : undefined;
+
+        if (!phone) {
+            return callback(400, { message: 'missing required fields.' });
+        }
+
+        // get the token from headers
+        const tokenId = data.headers.token;
+
+        // verify the token
+        const token = handlers._tokens.verifyToken(tokenId, phone);
+
+        if (!token) {
+            return callback(403, { message: 'missing token or token is invalid.' });
+        }
 
         // look for users
         const user = _data.read('users', phone);
@@ -201,6 +232,180 @@ handlers._users.delete = async (data, callback) => {
     } catch (error) {
         return callback(500, { message: error.message });
     }
+};
+
+// tokens
+handlers.tokens = async (data, callback) => {
+    const accetableMethods = ['post', 'get', 'put', 'delete'];
+
+    console.log('data.method', data.method);
+
+    if (accetableMethods.indexOf(data.method) < 0) {
+        return callback(405);
+    }
+
+    try {
+        await handlers._tokens[data.method](data, callback);
+    } catch (error) {
+        callback(500, { message: error.message });
+    }
+};
+
+// container for user submethods
+handlers._tokens = {};
+
+// tokens - post
+// required data: phone, password
+// optional data: none
+handlers._tokens.post = async (data, callback) => {
+    try {
+        // check
+        const phone = typeof data?.payload?.phone === 'string' && data?.payload?.phone.trim().length === 10 ?
+            data.payload.phone : undefined;
+
+        const password = typeof data?.payload?.password === 'string' && data?.payload?.password.trim().length > 0 ?
+            data.payload.password : undefined;
+
+        if (!phone || !password) {
+            return callback(400, { message: 'missing required fields.' });
+        }
+
+        // look up for the user
+        const user = _data.read('users', phone);
+
+        if (!user) {
+            return callback(404, { message: 'the user does not exist.' });
+        }
+
+        // hash the sent password n compare it
+        const hashedPassword = helpers.hash(password);
+
+        if (hashedPassword !== user.hashedPassword) {
+            return callback(401, { message: 'the password is incorrect.' });
+        }
+
+        // create a new token
+        const tokenId = helpers.createRandomString(20);
+        const tokenExpires = Date.now() + 1000 * 60 * 60;
+        const tokenObject = {
+            tokenId,
+            phone,
+            tokenExpires
+        };
+
+        // store the token
+        _data.create('tokens', tokenId, tokenObject);
+
+        callback(200, tokenObject);
+    } catch (error) {
+        callback(500, { message: error.message });
+    }
+};
+
+// tokens - get
+// requiered data: id
+// optional data: none
+handlers._tokens.get = async (data, callback) => {
+    try {
+        // check
+        const id = typeof data?.queryStringObject.get('id') === 'string' ?
+            data?.queryStringObject.get('id') : undefined;
+
+        if (!id) {
+            return callback(400, { message: 'missing required fields.' });
+        }
+
+        const token = _data.read('tokens', id);
+
+        if (!token) {
+            return callback(404, { message: 'the token does not exist.' });
+        }
+
+        callback(200, token);
+    } catch (error) {
+        callback(500, { message: error.message });
+    }
+};
+
+// tokens - put
+// requiered data: id, extend
+// optional data: none
+handlers._tokens.put = async (data, callback) => {
+    try {
+        // check
+        const id = typeof data?.payload?.id === 'string' ?
+            data?.payload?.id : undefined;
+
+        const extend = typeof data?.payload?.extend === 'boolean' ?
+            data.payload.extend : false;
+
+        if (!id || !extend) {
+            return callback(400, { message: 'missing required fields.' });
+        }
+
+        // get the token
+        const token = _data.read('tokens', id);
+
+        if (!token) {
+            return callback(404, { message: 'the token does not exist.' });
+        }
+
+
+        if (token.tokenExpires < Date.now()) {
+            return callback(412, { message: 'the token is already expired.' });
+        }
+
+        const newTokenData = {
+            ...token,
+            tokenExpires: Date.now() + 1000 * 60 * 60
+        };
+
+        _data.update('tokens', newTokenData.tokenId, newTokenData);
+
+        callback(200);
+    } catch (error) {
+        callback(500, { message: error.message });
+    }
+};
+
+// tokens - delete
+// requiered data: id
+// optional data: none
+handlers._tokens.delete = async (data, callback) => {
+    try {
+        const id = typeof data?.queryStringObject.get('id') === 'string' ?
+            data?.queryStringObject.get('id') : undefined;
+
+        if (!id) {
+            return callback(400, { message: 'missing required fields.' });
+        }
+
+        // look for the token
+        const token = _data.read('tokens', id);
+
+        if (!token) {
+            return callback(404, { message: 'the token does not exist.' });
+        }
+
+        _data.delete('tokens', id);
+
+        callback(200);
+    } catch (error) {
+        return callback(500, { message: error.message });
+    }
+}
+
+// verify if a given id is currently valid for a given user
+handlers._tokens.verifyToken = (tokenId, phone) => {
+    const token = _data.read('tokens', tokenId);
+
+    if (!token) return null;
+
+    if (token.phone !== phone || token.tokenExpires < Date.now()) {
+        return null;
+    }
+
+    return token;
 };
 
 module.exports = handlers;

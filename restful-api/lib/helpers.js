@@ -13,7 +13,6 @@ const config = require('../config');
 const helpers = {};
 
 helpers.hash = (value) => {
-    console.log('going to hash', value);
     if (!value || !typeof value === 'string') {
         throw new Error('the value must be a non empty string.');
     }
@@ -34,6 +33,28 @@ helpers.parseJsonToObject = (value) => {
     } catch (error) {
         return {};
     }
+};
+
+helpers.createRandomString = (length) => {
+    length = typeof length === 'number' && length > 0 ? length : undefined;
+
+    if (!length) {
+        throw new Error('the length must be a number.');
+    }
+
+    // define al the possible char
+    const possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+    // start the string
+    let str = '';
+
+    for (let i = 0; i < length; i++) {
+        const randomChar = possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
+
+        str += randomChar;
+    }
+
+    return str;
 };
 
 module.exports = helpers;
