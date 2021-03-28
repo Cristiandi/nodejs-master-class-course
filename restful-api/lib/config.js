@@ -2,6 +2,7 @@
 * create n export configuration vars
 */
 
+
 // container for all environments
 
 const environments = {};
@@ -12,7 +13,12 @@ environments.staging = {
     httpsPort: 3001,
     envName: 'staging',
     hashingSecret: process.env.HASHING_SECRET || 'superSecretDude',
-    maxChecks: 5
+    maxChecks: 5,
+    twilio: {
+        accountSID: process.env.TWILIO_ACCOUNT_SID || '',
+        authToken: process.env.TWILIO_AUTH_TOKEN || '',
+        phoneNumber: process.env.TWILIO_PHONE_NUMBER || ''
+    }
 };
 
 // production object
@@ -21,7 +27,12 @@ environments.production = {
     httpsPort: 4001,
     envName: 'production',
     hashingSecret: process.env.HASHING_SECRET || 'superSecretDude',
-    maxChecks: 5
+    maxChecks: 5,
+    twilio: {
+        accountSID: process.env.TWILIO_ACCOUNT_SID || '',
+        authToken: process.env.TWILIO_AUTH_TOKEN || '',
+        phoneNumber: process.env.TWILIO_PHONE_NUMBER || ''
+    }
 };
 
 // determine which environment was passed as a command-line argument
