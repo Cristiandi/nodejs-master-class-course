@@ -17,7 +17,8 @@ const router = {
     ping: handlers.ping,
     hello: handlers.hello,
     users: handlers.users,
-    tokens: handlers.tokens
+    tokens: handlers.tokens,
+    checks: handlers.checks
 };
 
 // all the server logic

@@ -3,3 +3,4 @@
 .data/test/*
 .data/users/*
 .data/tokens/*
+.data/checks/*
