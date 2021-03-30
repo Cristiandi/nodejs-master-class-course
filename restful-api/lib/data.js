@@ -61,8 +61,19 @@ lib.update = (dir, file, data) => {
         fs.closeSync(fileDescriptor);   
     }
 }
+
+// detele a file
 lib.delete = (dir, file) => {
     fs.unlinkSync(lib.baseDir + '/' + dir + '/' + file + '.json');
+};
+
+// list all the items in a directory
+lib.list = (dir) => {
+    const fileNames = fs.readdirSync(lib.baseDir + '/' + dir);
+
+    let trimmedFileNames = fileNames.map(fileName => fileName.replace('.json', ''));
+
+    return trimmedFileNames;
 };
  
 // export the module

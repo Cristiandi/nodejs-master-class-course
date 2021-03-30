@@ -77,7 +77,7 @@ helpers.sendTwilioSMS = async (phone, message) => {
         Body: message
     };
 
-    console.log(payload);
+    // console.log(payload);
 
     const payloadString = querystring.stringify(payload);
 
@@ -96,7 +96,7 @@ helpers.sendTwilioSMS = async (phone, message) => {
             }
         };
 
-        console.log('reqDetail', requestOptions);
+        // console.log('reqDetail', requestOptions);
 
         const req = https.request(requestOptions, (res) => {
             const status = res.statusCode;
@@ -122,7 +122,6 @@ helpers.sendTwilioSMS = async (phone, message) => {
                 return reject(response.message ? new Error(response.message) : new Error(`request fail with status ${status}`));
             });
             res.on('error', (e) => reject(e));
-
         });
 
         //
@@ -135,7 +134,9 @@ helpers.sendTwilioSMS = async (phone, message) => {
         req.end();
     });
 
-    await promiseRequest;
+    const result = await promiseRequest;
+
+    return result;
 };
 
 module.exports = helpers;
