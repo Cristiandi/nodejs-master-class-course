@@ -4,3 +4,4 @@
 .data/users/*
 .data/tokens/*
 .data/checks/*
+.logs/*

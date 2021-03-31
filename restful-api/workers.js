@@ -10,6 +10,7 @@ const https = require('https');
 
 const _data = require('./lib/data');
 const helpers = require('./lib/helpers');
+const _logs = require('./lib/logs');
 
 const workers = {};
 
@@ -19,7 +20,7 @@ workers.alertUserStatusChange = async (check) => {
 
     await helpers.sendTwilioSMS(check.userPhone, message);
 
-    console.log('user:', check.userPhone, ' for check:', check.id, ' was alerted!');
+    console.log('user:', check.userPhone, ' for check:', check.id, ' was alerted!                                                                           ');
 };
 
 workers.processCheckOutcome = async (check, checkOutcome) => {
@@ -31,6 +32,12 @@ workers.processCheckOutcome = async (check, checkOutcome) => {
     const alertWarranted = check.state !== state;
 
     const newCheck = { ...check, state, lastCheck: Date.now() };
+
+    try {
+        workers.log(newCheck, checkOutcome, state, alertWarranted, newCheck.lastCheck);    
+    } catch (error) {
+        console.error(error);
+    }
 
     _data.update('checks', newCheck.id, newCheck);
 
@@ -174,6 +181,57 @@ workers.gatherAllChecks = async () => {
     }
 };
 
+// timer to execute log rotation
+workers.logRotationLoop = () => {
+    setInterval(() => {
+        workers.rotateLogs();
+    }, 1000 * 60 * 60 * 24);
+};
+
+// rotate (compress) logs files
+workers.rotateLogs = () => {
+    // list all the non compressed files
+    const logs = _logs.list(false);
+
+    for (const logName of logs) {
+        // compress
+        const logId = logName.replace('.log', '');
+        const newLogId = logId + '-' + Date.now();
+        try {
+            _logs.compress(logId, newLogId);    
+        } catch (error) {
+            console.error('error compressing the log', error);
+        }
+
+        // truncate        
+        try {
+            _logs.truncate(logId);    
+        } catch (error) {
+            console.error('error truncating the log', error);   
+        }
+    }
+}; 
+
+workers.log = (check, checkOutcome, state, alertWarranted, lastCheck) => {
+    // form the log data
+    const logData = {
+        check,
+        checkOutcome,
+        state,
+        alertWarranted,
+        lastCheck
+    };
+
+    // convert data to string
+    const logString = JSON.stringify(logData);
+
+    // determinate the name
+    const logFileName = check.id;
+
+    _logs.append(logFileName, logString);
+
+};
+
 // timer to execute the worker once per minute
 workers.loop = () => {
     setInterval(() => {
@@ -186,6 +244,12 @@ workers.init = () => {
 
     // call a loop to preven the finish
     workers.loop();
+
+    // compress all the logs
+    workers.rotateLogs();
+
+    // call the compression
+    workers.logRotationLoop();
 };
 
 module.exports = workers;

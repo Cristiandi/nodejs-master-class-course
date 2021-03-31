@@ -71,7 +71,7 @@ lib.delete = (dir, file) => {
 lib.list = (dir) => {
     const fileNames = fs.readdirSync(lib.baseDir + '/' + dir);
 
-    let trimmedFileNames = fileNames.map(fileName => fileName.replace('.json', ''));
+    const trimmedFileNames = fileNames.map(fileName => fileName.replace('.json', ''));
 
     return trimmedFileNames;
 };
