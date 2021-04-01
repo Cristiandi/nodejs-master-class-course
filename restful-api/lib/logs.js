@@ -58,8 +58,6 @@ lib.compress = (logId, newLogId) => {
     // compress the data
     const buffer = zlib.gzipSync(fileContent);
 
-    console.log(lib.baseDir + '/' + destinationFile);
-
     const fileDescriptor = fs.openSync(lib.baseDir + '/' + destinationFile, 'wx');
 
     fs.writeFileSync(fileDescriptor, buffer.toString('base64'));

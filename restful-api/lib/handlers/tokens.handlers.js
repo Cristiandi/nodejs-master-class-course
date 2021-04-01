@@ -6,8 +6,6 @@ module.exports = (handlers) => {
     handlers.tokens = async (data, callback) => {
         const accetableMethods = ['post', 'get', 'put', 'delete'];
 
-        console.log('data.method', data.method);
-
         if (accetableMethods.indexOf(data.method) < 0) {
             return callback(405);
         }

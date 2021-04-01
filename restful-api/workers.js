@@ -7,10 +7,13 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
+const util = require('util');
 
 const _data = require('./lib/data');
 const helpers = require('./lib/helpers');
 const _logs = require('./lib/logs');
+
+const debug = util.debuglog('workers');
 
 const workers = {};
 
@@ -20,7 +23,7 @@ workers.alertUserStatusChange = async (check) => {
 
     await helpers.sendTwilioSMS(check.userPhone, message);
 
-    console.log('user:', check.userPhone, ' for check:', check.id, ' was alerted!                                                                           ');
+    debug('user:', check.userPhone, ' for check:', check.id, ' was alerted!                                                                           ');
 };
 
 workers.processCheckOutcome = async (check, checkOutcome) => {
@@ -44,7 +47,7 @@ workers.processCheckOutcome = async (check, checkOutcome) => {
     if (alertWarranted) {
         await workers.alertUserStatusChange(newCheck);
     } else {
-        console.log('no alert needed for user:', check.userPhone, ' check:', check.id);
+        debug('no alert needed for user:', check.userPhone, ' check:', check.id);
     }
 };
 
@@ -60,14 +63,14 @@ workers.performCheck = async (check) => {
     const checkUrlArray = check.url.split('/');
     const baseURL = check.protocol + '://' + checkUrlArray[0];
     const urlToCheck = checkUrlArray.slice(1).join('/');
-    // console.log('urlToCheck', urlToCheck);
+    // debug('urlToCheck', urlToCheck);
     const parsedUrl = new URL(urlToCheck, baseURL);
 
-    // console.log('parsedUrl', parsedUrl);
+    // debug('parsedUrl', parsedUrl);
 
     const path = parsedUrl.pathname + (parsedUrl.searchParams.toString() ? `?${parsedUrl.searchParams.toString()}` : '');
 
-    // console.log('path', path);
+    // debug('path', path);
 
     const promiseRequest = new Promise((resolve, reject) => {
         const requestOptions = {
@@ -158,14 +161,14 @@ workers.validateCheckData = async (check) => {
     checkClone.state = typeof checkClone.state === 'string' && ['up', 'down'].indexOf(checkClone.state) > -1 ? checkClone.state : 'down';
     checkClone.lastCheck = typeof checkClone.lastCheck !== 'number' && checkClone.lastCheck > 0 ? checkClone.lastCheck : undefined;
 
-    // console.log('checkClone', checkClone);
+    // debug('checkClone', checkClone);
 
     await workers.performCheck(check);
 };
 
 // lookup all the checks, get their data, send to validate
 workers.gatherAllChecks = async () => {
-    console.log('---');
+    debug('---');
     // get all the checks
     const fileNames = _data.list('checks');
 
@@ -240,6 +243,9 @@ workers.loop = () => {
 };
 
 workers.init = () => {
+    // send to console in yellow
+    console.log('\x1b[33m%s\x1b[0m', 'background workers are running.');
+
     workers.gatherAllChecks();
 
     // call a loop to preven the finish

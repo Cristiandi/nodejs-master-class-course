@@ -8,9 +8,12 @@ const http = require('http');
 const https = require('https');
 const StringDecoder = require('string_decoder').StringDecoder;
 const fs = require('fs');
+const util = require('util')
 
 const handlers = require('./lib/handlers');
 const helpers = require('./lib/helpers');
+
+const debug = util.debuglog('server');
 
 // instantiate the server module object
 const server = {};
@@ -93,7 +96,11 @@ server.unifiedServer = async (req, res, httpString = 'http') => {
         res.end(payloadString);
 
         // log
-        console.log('returning this:', statusCode, payloadString);
+        if (`${statusCode}`.startsWith('2')) {
+            debug('\x1b[32m%s\x1b[0m', `${method.toUpperCase()} / ${trimmedPath} ${statusCode}`, payloadString);
+        } else {
+            debug('\x1b[32m%s\x1b[0m', `${method.toUpperCase()} / ${trimmedPath} ${statusCode}`, payloadString);
+        }
     });
 };
 
@@ -116,12 +123,12 @@ server.httpsServer = https.createServer(
 server.init = () => {
     // start the http server
     server.httpServer.listen(config.httpPort, () => {
-        console.log(`Ther server is on ${config.httpPort} port at ${config.envName}.`);
+        console.log('\x1b[36m%s\x1b[0m', `Ther server is on ${config.httpPort} port at ${config.envName}.`);
     });
 
     // start the https server
     server.httpsServer.listen(config.httpsPort, () => {
-        console.log(`Ther server is on ${config.httpsPort} port at ${config.envName}.`);
+        console.log('\x1b[35m%s\x1b[0m', `Ther server is on ${config.httpsPort} port at ${config.envName}.`);
     });
 
 };
