@@ -6,6 +6,8 @@
 const crypto = require('crypto');
 const querystring = require('querystring');
 const https = require('https');
+const path = require('path');
+const fs = require('fs');
 
 const config = require('./config');
 
@@ -137,6 +139,19 @@ helpers.sendTwilioSMS = async (phone, message) => {
     const result = await promiseRequest;
 
     return result;
+};
+
+// get the string content of a template
+helpers.getTemplate = (templateName) => {
+    if (!templateName) {
+        throw new Error('a valid template name was not specified!');
+    }
+
+    const templatesDir = path.join(__dirname, '../templates');
+
+    const templateContent = fs.readFileSync(templatesDir + '/' + templateName + '.html', 'utf-8');
+
+    return templateContent;
 };
 
 module.exports = helpers;

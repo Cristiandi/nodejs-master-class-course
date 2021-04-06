@@ -20,11 +20,20 @@ const server = {};
 
 // define a request router
 server.router = {
+    '': handlers.index,
+    'account/create': handlers.accountCreate,
+    'account/edit': handlers.accountEdit,
+    'account/deleted': handlers.accountDeleted,
+    'sessions/create': handlers.sessionCreate,
+    'sessions/deleted': handlers.sessionDeleted,
+    'checks/all': handlers.checkList,
+    'checks/create': handlers.checkCreate,
+    'checks/edit': handlers.checkEdit,
     ping: handlers.ping,
-    hello: handlers.hello,
-    users: handlers.users,
-    tokens: handlers.tokens,
-    checks: handlers.checks
+    'api/hello': handlers.hello,
+    'api/users': handlers.users,
+    'api/tokens': handlers.tokens,
+    'api/checks': handlers.checks
 };
 
 // all the server logic
@@ -82,16 +91,27 @@ server.unifiedServer = async (req, res, httpString = 'http') => {
     };
 
     // route the request to the handler specified in the router
-    chosenHandler(data, (statusCode, payload) => {
+    chosenHandler(data, (statusCode, payload, contentType = 'application/json') => {
+        contentType = typeof contentType === 'string' ? contentType : 'json';
+
         statusCode = typeof statusCode === 'number' ? statusCode : 200;
 
-        payload = typeof payload === 'object' ? payload : {};
+        let payloadString = '';
 
-        // convert the payload to a string
-        const payloadString = JSON.stringify(payload);
+        if (contentType === 'json') {
+            res.setHeader('Content-Type', 'application/json');
+
+            payload = typeof payload === 'object' ? payload : {};
+
+            // convert the payload to a string
+            payloadString = JSON.stringify(payload);
+        } else  if (contentType === 'html') {
+            res.setHeader('Content-Type', 'text/html');
+
+            payloadString = typeof payload === 'string' ? payload : '';
+        }
 
         // return the response 
-        res.setHeader('Content-Type', 'application/json');
         res.writeHead(statusCode);
         res.end(payloadString);
 
