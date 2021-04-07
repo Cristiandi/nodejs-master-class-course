@@ -48,11 +48,20 @@ handlers.index = (data, callback) => {
     }
 
     try {
-        const templateContent = helpers.getTemplate('indexq');
+         // prepate
+         const templateData = {
+            'head.title': 'This is the title',
+            'head.description': 'This is the meta description',
+            'body.title': 'Hello templated world!',
+            'body.class': 'index'
+        };
+
+        const templateContent = helpers.getTemplate('index', templateData);
         
         // read the index template
         return callback(undefined, templateContent, 'html');    
     } catch (error) {
+        console.log(error);
         return callback(500, 'something went wrong!', 'html');
     }
 };

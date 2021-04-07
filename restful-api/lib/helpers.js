@@ -142,16 +142,72 @@ helpers.sendTwilioSMS = async (phone, message) => {
 };
 
 // get the string content of a template
-helpers.getTemplate = (templateName) => {
+helpers.getTemplate = (templateName, data = {}) => {
     if (!templateName) {
         throw new Error('a valid template name was not specified!');
     }
 
     const templatesDir = path.join(__dirname, '../templates');
 
-    const templateContent = fs.readFileSync(templatesDir + '/' + templateName + '.html', 'utf-8');
+    const headerContent = fs.readFileSync(`${templatesDir}/_header.html`, 'utf-8');
+    
+    let templateContent = fs.readFileSync(templatesDir + '/' + templateName + '.html', 'utf-8');
+
+    const footerContent = fs.readFileSync(`${templatesDir}/_footer.html`, 'utf-8');
+
+    templateContent = headerContent + templateContent + footerContent;
+
+    templateContent = helpers.interpolate(templateContent, data); 
+
+    console.log(templateContent);
 
     return templateContent;
+};
+
+// take a given string 
+helpers.interpolate = (str, data) => {
+    if (typeof str !== 'string') {
+        throw new Error('helpers.interpolate | str is not valid');
+    }
+    if (!str.length) {
+        throw new Error('helpers.interpolate | str is not valid');
+    }
+
+    if (typeof data !== 'object') {
+        throw new Error('helpers.interpolate | data is not valid');
+    }
+    if (!data) {
+        throw new Error('helpers.interpolate | data is not valid');
+    }
+
+    let globals = {};
+
+    const { templateGlobals } = config;
+
+    // add the template globals
+    for (const key in templateGlobals) {
+        if (Object.hasOwnProperty.call(templateGlobals, key)) {
+            const element = templateGlobals[key];
+            globals['global.' + key] = element;
+        }
+    }
+
+    const nestedData = {
+        ...data,
+        ...globals
+    };
+
+    let replacedString = str;
+
+    for (const key in nestedData) {
+        if (Object.hasOwnProperty.call(nestedData, key) && typeof nestedData[key] === 'string') {
+            const replpace = nestedData[key];
+            const find = `{${key}}`;
+            replacedString = replacedString.replace(find, replpace);
+        }
+    }
+
+    return replacedString;
 };
 
 module.exports = helpers;
