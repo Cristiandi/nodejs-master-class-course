@@ -20,6 +20,8 @@ const server = {};
 
 // define a request router
 server.router = {
+    'favicon.ico': handlers.favicon,
+    'public': handlers.public,
     '': handlers.index,
     'account/create': handlers.accountCreate,
     'account/edit': handlers.accountEdit,
@@ -79,7 +81,10 @@ server.unifiedServer = async (req, res, httpString = 'http') => {
 
     // chosee the handler this request should go to
     // if one not found use the not found handler
-    const chosenHandler = server.router[trimmedPath] ? server.router[trimmedPath] : handlers.notFound;
+    let chosenHandler = server.router[trimmedPath] ? server.router[trimmedPath] : handlers.notFound;
+
+    // if the request is public
+    chosenHandler = trimmedPath.includes('public/') ? handlers.public : chosenHandler;
 
     // construct the data object to send to the handler
     const data = {
@@ -96,7 +101,7 @@ server.unifiedServer = async (req, res, httpString = 'http') => {
 
         statusCode = typeof statusCode === 'number' ? statusCode : 200;
 
-        let payloadString = '';
+        let payloadToResponse = '';
 
         if (contentType === 'json') {
             res.setHeader('Content-Type', 'application/json');
@@ -104,22 +109,43 @@ server.unifiedServer = async (req, res, httpString = 'http') => {
             payload = typeof payload === 'object' ? payload : {};
 
             // convert the payload to a string
-            payloadString = JSON.stringify(payload);
+            payloadToResponse = JSON.stringify(payload);
         } else  if (contentType === 'html') {
             res.setHeader('Content-Type', 'text/html');
 
-            payloadString = typeof payload === 'string' ? payload : '';
+            payloadToResponse = typeof payload === 'string' ? payload : '';
+        } else  if (contentType === 'favicon') {
+            res.setHeader('Content-Type', 'image/x-icon');
+
+            payloadToResponse = typeof payload !== 'undefined' ? payload : '';
+        } else  if (contentType === 'css') {
+            
+            res.setHeader('Content-Type', 'text/css');
+
+            payloadToResponse = typeof payload !== 'undefined' ? payload : '';
+        } else  if (contentType === 'png') {
+            res.setHeader('Content-Type', 'image/png');
+
+            payloadToResponse = typeof payload !== 'undefined' ? payload : '';
+        } else  if (contentType === 'jpg') {
+            res.setHeader('Content-Type', 'image/jpeg');
+
+            payloadToResponse = typeof payload !== 'undefined' ? payload : '';
+        } else  if (contentType === 'plain') {
+            res.setHeader('Content-Type', 'text/plain');
+
+            payloadToResponse = typeof payload !== 'undefined' ? payload : '';
         }
 
         // return the response 
         res.writeHead(statusCode);
-        res.end(payloadString);
+        res.end(payloadToResponse);
 
         // log
         if (`${statusCode}`.startsWith('2')) {
-            debug('\x1b[32m%s\x1b[0m', `${method.toUpperCase()} / ${trimmedPath} ${statusCode}`, payloadString);
+            debug('\x1b[32m%s\x1b[0m', `${method.toUpperCase()} / ${trimmedPath} ${statusCode}`, payloadToResponse);
         } else {
-            debug('\x1b[32m%s\x1b[0m', `${method.toUpperCase()} / ${trimmedPath} ${statusCode}`, payloadString);
+            debug('\x1b[32m%s\x1b[0m', `${method.toUpperCase()} / ${trimmedPath} ${statusCode}`, payloadToResponse);
         }
     });
 };

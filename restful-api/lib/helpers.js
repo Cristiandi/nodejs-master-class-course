@@ -159,7 +159,7 @@ helpers.getTemplate = (templateName, data = {}) => {
 
     templateContent = helpers.interpolate(templateContent, data); 
 
-    console.log(templateContent);
+    // console.log(templateContent);
 
     return templateContent;
 };
@@ -208,6 +208,19 @@ helpers.interpolate = (str, data) => {
     }
 
     return replacedString;
+};
+
+// get the content of an asset
+helpers.getStaticAsset = (fileName) => {
+    if (typeof fileName !== 'string') {
+        throw new Error(`helpers.getStaticAsset | fileName: ${fileName} is invalid.`);
+    }
+
+    const publicDir = path.join(__dirname, '../public');
+
+    const content = fs.readFileSync(publicDir + '/' + fileName);
+
+    return content;
 };
 
 module.exports = helpers;
