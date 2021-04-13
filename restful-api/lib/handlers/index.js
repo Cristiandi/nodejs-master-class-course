@@ -12,8 +12,12 @@ const usersHandlers = require('./users.handlers');
 const handlers = {};
 
 // ping router
-handlers.ping = (data, callback) => {
-    callback(200);
+handlers.ping = (data, callback) => {    
+    const response = {
+        message: 'pong'
+    };
+
+    return callback(200, response);
 };
 
 handlers.hello = (data, callback) => {

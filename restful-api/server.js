@@ -96,7 +96,7 @@ server.unifiedServer = async (req, res, httpString = 'http') => {
     };
 
     // route the request to the handler specified in the router
-    chosenHandler(data, (statusCode, payload, contentType = 'application/json') => {
+    chosenHandler(data, (statusCode, payload, contentType = 'json') => {
         contentType = typeof contentType === 'string' ? contentType : 'json';
 
         statusCode = typeof statusCode === 'number' ? statusCode : 200;
