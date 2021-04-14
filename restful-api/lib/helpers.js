@@ -197,6 +197,8 @@ helpers.interpolate = (str, data) => {
         ...globals
     };
 
+    // console.log('nestedData', nestedData);
+
     let replacedString = str;
 
     for (const key in nestedData) {
@@ -206,6 +208,8 @@ helpers.interpolate = (str, data) => {
             replacedString = replacedString.replace(find, replpace);
         }
     }
+
+    // console.log(replacedString);
 
     return replacedString;
 };

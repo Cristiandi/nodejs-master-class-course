@@ -73,7 +73,7 @@ handlers.public = (data, callback) => {
         return callback(404, undefined, 'html');
     }
 
-    console.log('trimmedAssetName', trimmedAssetName);
+    // console.log('trimmedAssetName', trimmedAssetName);
 
     // read the file in assets
     try {
@@ -105,9 +105,8 @@ handlers.index = (data, callback) => {
     try {
          // prepate
          const templateData = {
-            'head.title': 'This is the title',
-            'head.description': 'This is the meta description',
-            'body.title': 'Hello templated world!',
+            'head.title': 'Uptime monitoring - Made Simple',
+            'head.description': 'We offer uptime monitoring for HTTP/HTTPS',
             'body.class': 'index'
         };
 
