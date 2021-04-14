@@ -67,6 +67,8 @@ app.client.request = (headers, path, method, queryStringObject, payload) => {
     // send the payload
     const payloadString = JSON.stringify(payload);
 
+    console.log('payloadString', payloadString);
+
     xhr.send(payloadString);
 
     return new Promise((resolve, reject) => {
@@ -96,4 +98,71 @@ app.client.request = (headers, path, method, queryStringObject, payload) => {
             }
         };
     });
+};
+
+app.bindForms = function () {
+    document.querySelector("form").addEventListener("submit", function (e) {
+
+        // Stop it from submitting
+        e.preventDefault();
+        const formId = this.id;
+        const path = this.action;
+        const method = this.method.toUpperCase();
+
+        // Hide the error message (if it's currently shown due to a previous error)
+        document.querySelector("#" + formId + " .formError").style.display = 'hidden';
+
+        // Turn the inputs into a payload
+        const payload = {};
+        const elements = this.elements;
+        for (let i = 0; i < elements.length; i++) {
+            if (elements[i].type !== 'submit') {
+                const valueOfElement = elements[i].type == 'checkbox' ? elements[i].checked : elements[i].value;
+                payload[elements[i].name] = valueOfElement;
+            }
+        }
+
+        // Call the API
+
+        app.client.request(undefined, path, method, undefined, payload)
+            .then(({ statusCode, data }) => {
+                // successful, send to form response processor
+                app.formResponseProcessor(formId, payload, data);
+            })
+            .catch(error => {
+                // Try to get the error from the api, or set a default error message
+                let errorMessage;
+                if (error.statusCode && error.data) {
+                    errorMessage = typeof error.data.message === 'string' ? error.data.message : 'An error has occured, please try again';
+                } else {
+                    errorMessage = typeof error === 'string' ? error : 'An error has occured, please try again';
+                }
+
+                // Set the formError field with the error text
+                document.querySelector("#" + formId + " .formError").innerHTML = errorMessage;
+
+                // Show (unhide) the form error field on the form
+                document.querySelector("#" + formId + " .formError").style.display = 'block';
+            });
+    });
+};
+
+// Form response processor
+app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
+    var functionToCall = false;
+    if (formId == 'accountCreate') {
+        // @TODO Do something here now that the account has been created successfully
+        console.log('the account created form was good!');
+    }
+};
+
+// Init (bootstrapping)
+app.init = function () {
+    // Bind all form submissions
+    app.bindForms();
+};
+
+// Call the init processes after the window loads
+window.onload = function () {
+    app.init();
 };

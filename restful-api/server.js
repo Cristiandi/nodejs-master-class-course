@@ -20,6 +20,7 @@ const server = {};
 
 // define a request router
 server.router = {
+    // web
     'favicon.ico': handlers.favicon,
     'public': handlers.public,
     '': handlers.index,
@@ -31,6 +32,7 @@ server.router = {
     'checks/all': handlers.checkList,
     'checks/create': handlers.checkCreate,
     'checks/edit': handlers.checkEdit,
+    // api
     ping: handlers.ping,
     'api/hello': handlers.hello,
     'api/users': handlers.users,
