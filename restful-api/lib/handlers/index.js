@@ -7,7 +7,8 @@ const helpers = require('../helpers');
 const checksHandlers = require('./checks.handlers');
 const tokensHandlers = require('./tokens.handlers');
 const usersHandlers = require('./users.handlers');
-const accountHandlers = require('./account.handlers')
+const accountHandlers = require('./account.handlers');
+const sessionsHandlers = require('./sessions.handlers');
 
 // define the handlers
 const handlers = {};
@@ -122,5 +123,7 @@ handlers.index = (data, callback) => {
 };
 
 accountHandlers(handlers);
+
+sessionsHandlers(handlers);
 
 module.exports = handlers;
