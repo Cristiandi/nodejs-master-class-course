@@ -40,10 +40,18 @@ app.client.request = (headers, path, method, queryStringObject, payload) => {
         throw new Error(`app.client.request | payload ${payload} is invalid.`);
     }
 
-    // adding query string params
-    const concatQueryParams = Object.keys(queryStringObject | {}).map(key => queryStringObject[key]).join('&');
+    // console.log('queryStringObject', queryStringObject);
 
-    let requestUrl = Object.keys(queryStringObject | {}).length ? `${path}?${concatQueryParams}` : path;
+    // adding query string params
+    const keys = Object.keys(queryStringObject || {});
+
+    let concatQueryParams = keys.map(key => `${key}=${queryStringObject[key]}`);
+
+    concatQueryParams = concatQueryParams.length > 1 ? concatQueryParams.join('&') : concatQueryParams[0];
+
+    // console.log('concatQueryParams', concatQueryParams);
+
+    let requestUrl = keys.length ? `${path}?${concatQueryParams}` : path;
 
     const xhr = new XMLHttpRequest();
 
@@ -97,6 +105,38 @@ app.client.request = (headers, path, method, queryStringObject, payload) => {
             }
         };
     });
+};
+
+// Bind the logout button
+app.bindLogoutButton = function () {
+    document.getElementById("logoutButton").addEventListener("click", function (e) {
+
+        // Stop it from redirecting anywhere
+        e.preventDefault();
+
+        // Log the user out
+        app.logUserOut();
+
+    });
+};
+
+// Log the user out then redirect them
+app.logUserOut = async function () {
+    // Get the current token id
+    const tokenId = typeof (app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : undefined;
+
+    // Send the current token to the tokens endpoint to delete it
+    const queryStringObject = {
+        id: tokenId
+    };
+
+    await app.client.request(undefined, 'api/tokens', 'DELETE', queryStringObject, undefined);
+
+    // Set the app.config token as false
+    app.setSessionToken(undefined);
+
+    // Send the user to the logged out page
+    window.location = '/session/deleted';
 };
 
 app.bindForms = function () {
@@ -195,11 +235,15 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
 // Get the session token from localstorage and set it in the app.config object
 app.getSessionToken = function () {
     const tokenString = localStorage.getItem('token');
+
+    // console.log('tokenString', tokenString);
+
     if (typeof (tokenString) == 'string') {
         try {
             const token = JSON.parse(tokenString);
             app.config.sessionToken = token;
             if (typeof (token) == 'object') {
+                console.log('logged!');
                 app.setLoggedInClass(true);
             } else {
                 app.setLoggedInClass(false);
@@ -226,7 +270,8 @@ app.setSessionToken = function (token) {
     app.config.sessionToken = token;
     const tokenString = JSON.stringify(token);
     localStorage.setItem('token', tokenString);
-    if (typeof (token) == 'object') {
+    if (typeof token === 'object') {
+        console.log('logged');
         app.setLoggedInClass(true);
     } else {
         app.setLoggedInClass(false);
@@ -235,10 +280,10 @@ app.setSessionToken = function (token) {
 
 // Renew the token
 app.renewToken = async function () {
-    const currentToken = typeof (app.config.sessionToken) == 'object' ? app.config.sessionToken : undefined;
+    const currentToken = typeof app.config.sessionToken == 'object' ? app.config.sessionToken : undefined;
 
     if (!currentToken) {
-        app.setSessionToken(false);
+        app.setSessionToken(undefined);
         throw new Error(`can't get the current token.`);
     }
 
@@ -249,7 +294,7 @@ app.renewToken = async function () {
     };
 
     try {
-        await app.client(undefined, 'api/tokens', 'PUT', undefined, payload);
+        await app.client.request(undefined, 'api/tokens', 'PUT', undefined, payload);
 
         const queryStringObject = { id: currentToken.id };
 
@@ -257,7 +302,7 @@ app.renewToken = async function () {
 
         app.setSessionToken(responsePayload.data);
     } catch (error) {
-        console.err(error);
+        console.error(error);
         app.setSessionToken(undefined);
         throw error;
     }
@@ -268,14 +313,25 @@ app.tokenRenewalLoop = function () {
     setInterval(function () {
         app.renewToken()
             .then(() => console.log("Token renewed successfully @ " + Date.now()))
-            .catch(err => console.error('error in renewToken', err));
+            .catch(err => console.log('error in renewToken', err));
     }, 1000 * 60);
 };
 
 // Init (bootstrapping)
 app.init = function () {
+
     // Bind all form submissions
     app.bindForms();
+
+    // Bind logout logout button
+    app.bindLogoutButton();
+
+    // Get the token from localstorage
+    app.getSessionToken();
+
+    // Renew token
+    app.tokenRenewalLoop();
+
 };
 
 // Call the init processes after the window loads
