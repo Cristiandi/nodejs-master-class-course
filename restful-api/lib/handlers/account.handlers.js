@@ -26,4 +26,27 @@ module.exports = (handlers) => {
         }
     };
 
+    // edit the account
+    handlers.accountEdit = (data, callback) => {
+        if (data.method !== 'get') {
+            return callback(405, undefined, 'html');
+        }
+
+        try {
+            // prepate
+            const templateData = {
+                'head.title': 'Account settings',
+                'body.class': 'accountEdit'
+            };
+
+            const templateContent = helpers.getTemplate('account-edit', templateData);
+
+            // read the index template
+            return callback(undefined, templateContent, 'html');
+        } catch (error) {
+            console.log(error);
+            return callback(500, 'something went wrong!', 'html');
+        }
+    };
+
 };
