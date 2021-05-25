@@ -121,7 +121,10 @@ app.bindLogoutButton = function () {
 };
 
 // Log the user out then redirect them
-app.logUserOut = async function () {
+app.logUserOut = async function (redirect) {
+    // Set redirectUser to default to true
+    const redirectUser = typeof redirect == 'boolean' ? redirect : true;
+
     // Get the current token id
     const tokenId = typeof (app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : undefined;
 
@@ -136,7 +139,9 @@ app.logUserOut = async function () {
     app.setSessionToken(undefined);
 
     // Send the user to the logged out page
-    window.location = '/session/deleted';
+    if (redirectUser) {
+        window.location = '/session/deleted';
+    }
 };
 
 app.bindForms = function () {
@@ -174,7 +179,10 @@ app.bindForms = function () {
             console.log('method', method);
             console.log('payload', payload);
 
-            app.client.request(undefined, path, method, undefined, payload)
+            // If the method is DELETE, the payload should be a queryStringObject instead
+            const queryStringObject = method.toUpperCase() == 'DELETE' ? payload : {};
+
+            app.client.request(undefined, path, method, queryStringObject, payload)
                 .then(({ statusCode, data }) => {
                     // successful, send to form response processor
                     app.formResponseProcessor(formId, payload, data);
@@ -241,6 +249,13 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
     const formsWithSuccessMessages = ['accountEdit1', 'accountEdit2'];
     if (formsWithSuccessMessages.includes(formId)) {
         document.querySelector("#" + formId + " .formSuccess").style.display = 'block';
+    }
+
+    // 
+    if (formId === 'accountEdit3') {
+        app.logUserOut(false);
+
+        window.location = '/account/deleted';
     }
 };
 

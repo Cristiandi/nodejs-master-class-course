@@ -49,4 +49,28 @@ module.exports = (handlers) => {
         }
     };
 
+    // account has been deleted
+    handlers.accountDeleted = (data, callback) => {
+        if (data.method !== 'get') {
+            return callback(405, undefined, 'html');
+        }
+
+        try {
+            // prepate
+            const templateData = {
+                'head.title': 'Account deleted',
+                'head.description': 'Yout account has been deleted',
+                'body.class': 'accountDeleted'
+            };
+
+            const templateContent = helpers.getTemplate('account-deleted', templateData);
+
+            // read the index template
+            return callback(undefined, templateContent, 'html');
+        } catch (error) {
+            console.log(error);
+            return callback(500, 'something went wrong!', 'html');
+        }
+    };
+
 };
