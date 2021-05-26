@@ -50,8 +50,7 @@ module.exports = (handlers) => {
                 timeoutSeconds = parseInt(data?.payload?.timeoutSeconds, 10);
             }
 
-            timeoutSeconds = typeof timeoutSeconds === 'number' && timeoutSeconds % 1 === 0 && timeoutSeconds >= 1 && timeoutSeconds <= 5 ?
-            timeoutSeconds : undefined;
+            timeoutSeconds = typeof timeoutSeconds === 'number' && timeoutSeconds % 1 === 0 && timeoutSeconds >= 1 && timeoutSeconds <= 5 ? timeoutSeconds : undefined;
 
             /*
             console.log('protocol', protocol);
@@ -168,9 +167,10 @@ module.exports = (handlers) => {
     // optional data: protocol, url, method, successCodes, timeoutSeconds (one must be send)
     handlers._checks.put = async (data, callback) => {
         try {
-            const id = typeof data?.payload?.id === 'string' && data?.payload?.id.trim().length === 20 ?
-                data.payload.id : undefined;
+            const id = typeof data?.payload?.uid === 'string' && data?.payload?.uid.trim().length === 20 ?
+                data.payload.uid : undefined;
 
+            // check
             const protocol = typeof data?.payload?.protocol === 'string' && ['http', 'https'].indexOf(data?.payload?.protocol) > -1 ?
                 data.payload.protocol : undefined;
 
@@ -180,12 +180,20 @@ module.exports = (handlers) => {
             const method = typeof data?.payload?.method === 'string' && ['get', 'post', 'put', 'delete'].indexOf(data?.payload?.method) > -1 ?
                 data.payload.method : undefined;
 
-            const successCodes = typeof data?.payload?.successCodes === 'object' && data?.payload?.successCodes instanceof Array && data?.payload?.successCodes.length > 0 ?
-                data.payload.successCodes : undefined;
+            let successCodes;
 
-            const timeoutSeconds = typeof data?.payload?.timeoutSeconds === 'number' && data?.payload?.timeoutSeconds % 1 === 0 && data?.payload?.timeoutSeconds >= 1 && data?.payload?.timeoutSeconds <= 5 ?
-                data.payload.timeoutSeconds : undefined;
-            
+            if (data?.payload?.successCodes && typeof data?.payload?.successCodes === 'string') {
+                successCodes = data?.payload?.successCodes.split(',').map(item => parseInt(item, 10));
+            }
+
+            let timeoutSeconds;
+
+            if (data?.payload?.timeoutSeconds) {
+                timeoutSeconds = parseInt(data?.payload?.timeoutSeconds, 10);
+            }
+
+            timeoutSeconds = typeof timeoutSeconds === 'number' && timeoutSeconds % 1 === 0 && timeoutSeconds >= 1 && timeoutSeconds <= 5 ? timeoutSeconds : undefined;
+
             if (!id) {
                 return callback(400, { message: 'missing required fields.' });
             }
@@ -235,8 +243,8 @@ module.exports = (handlers) => {
     // optional data: none
     handlers._checks.delete = async (data, callback) => {
         try {
-            const id = typeof data?.queryStringObject.get('id') === 'string' && data?.queryStringObject.get('id').trim().length === 20 ?
-                data?.queryStringObject.get('id') : undefined;
+            const id = typeof data?.queryStringObject.get('uid') === 'string' && data?.queryStringObject.get('uid').trim().length === 20 ?
+                data?.queryStringObject.get('uid') : undefined;
 
             if (!id) {
                 return callback(400, { message: 'missing required fields.' });
@@ -274,11 +282,11 @@ module.exports = (handlers) => {
             // handle the checks
             const userChecks = typeof user.checks === 'object' && user.checks instanceof Array ?
                 user.checks : [];
-            
+
             user.checks = userChecks.filter(item => item !== id);
 
             // save the new user data
-            _data.update('users', userPhone, user);            
+            _data.update('users', userPhone, user);
 
             return callback(200);
         } catch (error) {
@@ -323,6 +331,29 @@ module.exports = (handlers) => {
             };
 
             const templateContent = helpers.getTemplate('check-list', templateData);
+
+            // read the index template
+            return callback(undefined, templateContent, 'html');
+        } catch (error) {
+            console.log(error);
+            return callback(500, 'something went wrong!', 'html');
+        }
+    };
+
+    // edit check
+    handlers.checkEdit = (data, callback) => {
+        if (data.method !== 'get') {
+            return callback(405, undefined, 'html');
+        }
+
+        try {
+            // prepate
+            const templateData = {
+                'head.title': 'Check details',
+                'body.class': 'checkEdit'
+            };
+
+            const templateContent = helpers.getTemplate('check-edit', templateData);
 
             // read the index template
             return callback(undefined, templateContent, 'html');

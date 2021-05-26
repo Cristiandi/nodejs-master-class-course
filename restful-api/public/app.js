@@ -258,7 +258,15 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
     }
 
     // If the user just created a new check successfully, redirect back to the dashboard
-    if (formId == 'checksCreate') {
+    if (formId === 'checksCreate') {
+        window.location = '/checks/all';
+    }
+
+    if (formId === 'checksEdit1') {
+        window.location = '/checks/all';
+    }
+
+    if (formId === 'checksEdit2') {
         window.location = '/checks/all';
     }
 };
@@ -392,6 +400,11 @@ app.loadDataOnPage = () => {
     if (primaryClass == 'checkList') {
         app.loadChecksListPage();
     }
+
+    // Logic for check details page
+    if(primaryClass == 'checkEdit'){
+        app.loadChecksEditPage();
+    }
 };
 
 // Load the dashboard page specifically
@@ -439,7 +452,7 @@ app.loadChecksListPage = async function () {
         document.getElementById("createCheckCTA").style.display = 'block';
 
         return;
-    } 
+    }
 
     if (allChecks.length < 5) {
         // Show the createCheck CTA
@@ -477,6 +490,48 @@ app.loadChecksListPage = async function () {
         td4.innerHTML = '<a href="/checks/edit?id=' + checkData.id + '">View / Edit / Delete</a>';
     }
 
+};
+
+// Load the checks edit page specifically
+app.loadChecksEditPage = async function () {
+    // Get the check id from the query string, if none is found then redirect back to dashboard
+    const id = typeof (window.location.href.split('=')[1]) == 'string' && window.location.href.split('=')[1].length > 0 ? window.location.href.split('=')[1] : undefined;
+
+    if (!id) {
+        window.location = '/checks/all';
+
+        return;
+    }
+
+    const queryStringObject = { id };
+
+    const responsePayload = await app.client.request(undefined, 'api/checks', 'GET', queryStringObject, undefined);
+
+    const { statusCode = 500, data: checkData } = responsePayload;
+
+    if (statusCode !== 200) {
+        // If the request comes back as something other than 200, redirect back to dashboard
+        window.location = '/checks/all';
+
+        return;
+    }
+
+    // Put the hidden id field into both forms
+    const hiddenIdInputs = document.querySelectorAll("input.hiddenIdInput");
+    for(let i = 0; i < hiddenIdInputs.length; i++){
+        hiddenIdInputs[i].value = checkData.id;
+    }
+
+    // Put the data into the top form as values where needed
+    document.querySelector("#checksEdit1 .displayIdInput").value = checkData.id;
+    document.querySelector("#checksEdit1 .displayStateInput").value = checkData.state;
+    document.querySelector("#checksEdit1 .protocolInput").value = checkData.protocol;
+    document.querySelector("#checksEdit1 .urlInput").value = checkData.url;
+    document.querySelector("#checksEdit1 .methodInput").value = checkData.method;
+    document.querySelector("#checksEdit1 .timeoutInput").value = checkData.timeoutSeconds;
+    document.querySelector("#checksEdit1 #successCodes").value = checkData.successCodes.join(',');
+
+    console.log('code', checkData.successCodes);
 };
 
 // Loop to renew token often
