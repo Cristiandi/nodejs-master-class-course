@@ -38,13 +38,22 @@ module.exports = (handlers) => {
             const method = typeof data?.payload?.method === 'string' && ['get', 'post', 'put', 'delete'].indexOf(data?.payload?.method) > -1 ?
                 data.payload.method : undefined;
 
-            const successCodes = typeof data?.payload?.successCodes === 'object' && data?.payload?.successCodes instanceof Array && data?.payload?.successCodes.length > 0 ?
-                data.payload.successCodes : undefined;
+            let successCodes;
 
-            const timeoutSeconds = typeof data?.payload?.timeoutSeconds === 'number' && data?.payload?.timeoutSeconds % 1 === 0 && data?.payload?.timeoutSeconds >= 1 && data?.payload?.timeoutSeconds <= 5 ?
-                data.payload.timeoutSeconds : undefined;
+            if (data?.payload?.successCodes && typeof data?.payload?.successCodes === 'string') {
+                successCodes = data?.payload?.successCodes.split(',').map(item => parseInt(item, 10));
+            }
 
-            /* 
+            let timeoutSeconds;
+
+            if (data?.payload?.timeoutSeconds) {
+                timeoutSeconds = parseInt(data?.payload?.timeoutSeconds, 10);
+            }
+
+            timeoutSeconds = typeof timeoutSeconds === 'number' && timeoutSeconds % 1 === 0 && timeoutSeconds >= 1 && timeoutSeconds <= 5 ?
+            timeoutSeconds : undefined;
+
+            /*
             console.log('protocol', protocol);
             console.log('url', url);
             console.log('method', method);
@@ -274,6 +283,52 @@ module.exports = (handlers) => {
             return callback(200);
         } catch (error) {
             return callback(500, { message: error.message });
+        }
+    };
+
+    // create a new check
+    handlers.checkCreate = (data, callback) => {
+        if (data.method !== 'get') {
+            return callback(405, undefined, 'html');
+        }
+
+        try {
+            // prepate
+            const templateData = {
+                'head.title': 'Create a new check',
+                'body.class': 'checksCreate'
+            };
+
+            const templateContent = helpers.getTemplate('check-create', templateData);
+
+            // read the index template
+            return callback(undefined, templateContent, 'html');
+        } catch (error) {
+            console.log(error);
+            return callback(500, 'something went wrong!', 'html');
+        }
+    };
+
+    // list all checks
+    handlers.checkList = (data, callback) => {
+        if (data.method !== 'get') {
+            return callback(405, undefined, 'html');
+        }
+
+        try {
+            // prepate
+            const templateData = {
+                'head.title': 'Dashboard',
+                'body.class': 'checkList'
+            };
+
+            const templateContent = helpers.getTemplate('check-list', templateData);
+
+            // read the index template
+            return callback(undefined, templateContent, 'html');
+        } catch (error) {
+            console.log(error);
+            return callback(500, 'something went wrong!', 'html');
         }
     };
 };
