@@ -171,7 +171,7 @@ app.bindForms = function () {
                 }
             }
 
-            const method = payload?._method?.toUpperCase() || this.method?.toUpperCase();
+            const method = payload?._method?.toUpperCase() || this.method.toUpperCase();
 
             // Call the API
 
@@ -254,12 +254,8 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
     // 
     if (formId === 'accountEdit3') {
         app.logUserOut(false);
-        window.location = '/account/deleted';
-    }
 
-    // If the user just created a new check successfully, redirect back to the dashboard
-    if (formId == 'checksCreate') {
-        window.location = '/checks/all';
+        window.location = '/account/deleted';
     }
 };
 
@@ -387,96 +383,6 @@ app.loadDataOnPage = () => {
     if (primaryClass == 'accountEdit') {
         app.loadAccountEditPage();
     }
-
-    // Logic for dashboard page
-    if (primaryClass == 'checkList') {
-        app.loadChecksListPage();
-    }
-};
-
-// Load the dashboard page specifically
-app.loadChecksListPage = async function () {
-    const phone = typeof app.config.sessionToken.userPhone === 'string' ? app.config.sessionToken.userPhone : undefined;
-
-    if (!phone) {
-        // If the request comes back as something other than 200, log the user our (on the assumption that the api is temporarily down or the users token is bad)
-        app.logUserOut();
-
-        return;
-    }
-
-    const queryStringObject = {
-        phone
-    };
-
-    const responsePayload = await app.client.request(undefined, 'api/users', 'GET', queryStringObject, undefined);
-
-    const { statusCode = 500, data } = responsePayload;
-
-    if (statusCode !== 200) {
-        app.logUserOut();
-
-        return;
-    }
-
-    const allChecks = data.checks;
-
-    if (!allChecks) {
-        // Show 'you have no checks' message
-        document.getElementById("noChecksMessage").style.display = 'table-row';
-
-        // Show the createCheck CTA
-        document.getElementById("createCheckCTA").style.display = 'block';
-
-        return;
-    }
-
-    if (!allChecks.length) {
-        // Show 'you have no checks' message
-        document.getElementById("noChecksMessage").style.display = 'table-row';
-
-        // Show the createCheck CTA
-        document.getElementById("createCheckCTA").style.display = 'block';
-
-        return;
-    } 
-
-    if (allChecks.length < 5) {
-        // Show the createCheck CTA
-        document.getElementById("createCheckCTA").style.display = 'block';
-
-        // return;
-    }
-
-    for (const checkId of allChecks) {
-        const newQueryStringObject = { id: checkId };
-
-        const newResponsePayload = await app.client.request(undefined, 'api/checks', 'GET', newQueryStringObject, undefined);
-
-        if (newResponsePayload.statusCode !== 200) {
-            console.log("Error trying to load check ID: ", checkId);
-            continue;
-        }
-
-        const { data: checkData } = newResponsePayload;
-
-        // make the check data into a table row
-        const table = document.getElementById("checksListTable");
-        const tr = table.insertRow(-1);
-        tr.classList.add('checkRow');
-        const td0 = tr.insertCell(0);
-        const td1 = tr.insertCell(1);
-        const td2 = tr.insertCell(2);
-        const td3 = tr.insertCell(3);
-        const td4 = tr.insertCell(4);
-        td0.innerHTML = checkData.method.toUpperCase();
-        td1.innerHTML = checkData.protocol + '://';
-        td2.innerHTML = checkData.url;
-        const state = typeof (checkData.state) == 'string' ? checkData.state : 'unknown';
-        td3.innerHTML = state;
-        td4.innerHTML = '<a href="/checks/edit?id=' + checkData.id + '">View / Edit / Delete</a>';
-    }
-
 };
 
 // Loop to renew token often
