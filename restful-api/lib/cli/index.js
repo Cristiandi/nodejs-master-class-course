@@ -9,6 +9,9 @@ const readline = require('readline');
 const util = require('util');
 const events = require('events');
 
+// responder object
+const responders = require('./responders'); 
+
 const debug = util.debuglog('cli');
 
 class _events extends events{};
@@ -16,6 +19,43 @@ const e = new _events();
 
 // instantiate the CLI module object
 const cli = {};
+
+// input handlers
+e.on('help', str => {
+    responders.help();
+});
+
+e.on('exit', str => {
+    responders.exit();
+});
+
+e.on('stats', str => {
+    responders.stats();
+});
+
+e.on('list users', str => {
+    responders.listUsers();
+});
+
+e.on('more user info', str => {
+    responders.moreUserInfo(str);
+});
+
+e.on('list checks', str => {
+    responders.listCheck(str);
+});
+
+e.on('more check info', str => {
+    responders.moreCheckInfo(str);
+});
+
+e.on('list logs', str => {
+    responders.listLogs();
+});
+
+e.on('more log info', str => {
+    responders.moreLogInfo(str);
+});
 
 // input processor
 cli.processInput = (str = '' ) => {
@@ -29,7 +69,7 @@ cli.processInput = (str = '' ) => {
     // codify the unique strings
     const uniqueInputs = [
         'help',
-        'exits',
+        'exit',
         'stats',
         'list users',
         'more user info',
