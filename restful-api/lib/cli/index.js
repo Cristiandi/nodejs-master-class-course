@@ -67,7 +67,7 @@ e.on('exit', str => {
 });
 
 e.on('stats', str => {
-    responders.stats();
+    responders.stats(cli);
 });
 
 e.on('list users', str => {
