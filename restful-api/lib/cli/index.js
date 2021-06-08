@@ -71,7 +71,7 @@ e.on('stats', str => {
 });
 
 e.on('list users', str => {
-    responders.listUsers();
+    responders.listUsers(cli);
 });
 
 e.on('more user info', str => {

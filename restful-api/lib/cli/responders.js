@@ -1,6 +1,8 @@
 const os = require('os');
 const v8 = require('v8');
 
+const _data = require('../data');
+
 // responder object
 const responders = {};
 
@@ -95,8 +97,26 @@ responders.stats = (cli) => {
     cli.horizontalLine();
 };
 
-responders.listUsers = () => {
-    console.log('you asked for listUsers!');
+responders.listUsers = (cli) => {
+    try {
+        const userIds = _data.list('users');
+        
+        cli.verticalSpace(1);
+
+        for (const userId of userIds) {
+            const user = _data.read('users', userId);
+
+            let line = 'Name: ' + user.firstName + ' Phone: ' + user.phone;
+            const numberOfChecks = typeof user.checks === 'object' && Array.isArray(user.checks) && user.checks.length > 0 ? user.checks.length : 0;
+            line += ' Checks: ' + numberOfChecks;
+
+            console.log(line);
+
+            cli.verticalSpace(1);
+        }
+    } catch (error) {
+        console.error('sorry something went wrong:', error);
+    }
 };
 
 responders.moreUserInfo = (str) => {
