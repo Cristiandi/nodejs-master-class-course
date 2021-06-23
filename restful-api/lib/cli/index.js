@@ -75,7 +75,7 @@ e.on('list users', str => {
 });
 
 e.on('more user info', str => {
-    responders.moreUserInfo(str);
+    responders.moreUserInfo(cli, str);
 });
 
 e.on('list checks', str => {

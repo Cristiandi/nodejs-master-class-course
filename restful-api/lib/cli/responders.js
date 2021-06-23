@@ -119,8 +119,33 @@ responders.listUsers = (cli) => {
     }
 };
 
-responders.moreUserInfo = (str) => {
-    console.log('you asked for moreUserInfo!', str);
+responders.moreUserInfo = (cli, str) => {
+    // get the id from the str
+    const array = str.split('--');
+
+    const userId = typeof array[1] === 'string' && array[1].trim().length > 0 ? array[1].trim() : undefined;
+
+    if (!userId) {
+        return;
+    }
+
+    const user = _data.read('users', userId);
+
+    if (!user) {
+        console.error(`the user ${userId} does not exist.`);
+        return;
+    }
+
+    delete user.hashedPassword;
+
+    // print the JSON
+    cli.verticalSpace(1);
+
+    console.dir(user, {
+        colors: true
+    });
+
+    cli.verticalSpace(1);
 };
 
 responders.listCheck = (str) => {
