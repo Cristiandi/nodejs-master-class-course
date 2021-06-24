@@ -148,8 +148,36 @@ responders.moreUserInfo = (cli, str) => {
     cli.verticalSpace(1);
 };
 
-responders.listCheck = (str) => {
-    console.log('you asked for listCheck!', str);
+responders.listCheck = (cli, str) => {
+    try {
+        const checkIds = _data.list('checks');
+
+        if (!checkIds) {
+            return;
+        }
+
+        cli.verticalSpace(1);
+
+        for (const checkId of checkIds) {
+            const check = _data.read('checks', checkId);
+
+            const lowerStr = str.toLowerCase();
+            const checkState = typeof check.state === 'string' ? check.state : 'down';
+            const checkStateUnknown = typeof check.state === 'string' ? check.state : 'unknown';
+
+            if (lowerStr.includes('--'+checkState)) {
+                const line = 'ID: ' + check.id + ' ' + check.method.toUpperCase() + ' ' + check.protocol +  '://' + check.url + ' ' + checkStateUnknown;
+                console.log(line);
+
+                continue;
+            }
+
+            const line = 'ID: ' + check.id + ' ' + check.method.toUpperCase() + ' ' + check.protocol +  '://' + check.url + ' ' + checkStateUnknown;
+            console.log(line);
+        }
+    } catch (error) {
+        console.error('sorry something went wrong:', error);
+    }
 };
 
 responders.moreCheckInfo = (str) => {

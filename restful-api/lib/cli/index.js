@@ -79,7 +79,7 @@ e.on('more user info', str => {
 });
 
 e.on('list checks', str => {
-    responders.listCheck(str);
+    responders.listCheck(cli, str);
 });
 
 e.on('more check info', str => {
