@@ -6,3 +6,4 @@
 .data/checks/*
 .logs/*
 .directory
+.lib/config.js
