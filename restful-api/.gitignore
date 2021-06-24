@@ -6,4 +6,4 @@
 .data/checks/*
 .logs/*
 .directory
-.lib/config.js
+lib/config.js
