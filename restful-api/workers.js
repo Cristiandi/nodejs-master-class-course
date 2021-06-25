@@ -18,12 +18,12 @@ const debug = util.debuglog('workers');
 const workers = {};
 
 workers.alertUserStatusChange = async (check) => {
-    const message = 'alert: check for ' + check.method + ' ' +
+    const message = 'Ey ' +
     check.protocol + '://' + check.url + ' is currently ' + check.state;
 
     await helpers.sendTwilioSMS(check.userPhone, message);
 
-    debug('user:', check.userPhone, ' for check:', check.id, ' was alerted!                                                                           ');
+    debug('user:', check.userPhone, ' for check:', check.id, ' was alerted!');
 };
 
 workers.processCheckOutcome = async (check, checkOutcome) => {

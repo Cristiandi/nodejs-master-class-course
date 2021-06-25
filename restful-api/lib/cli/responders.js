@@ -2,6 +2,7 @@ const os = require('os');
 const v8 = require('v8');
 
 const _data = require('../data');
+const _logs = require('../logs');
 
 // responder object
 const responders = {};
@@ -172,20 +173,58 @@ responders.listCheck = (cli, str) => {
                 continue;
             }
 
-            const line = 'ID: ' + check.id + ' ' + check.method.toUpperCase() + ' ' + check.protocol +  '://' + check.url + ' ' + checkStateUnknown;
-            console.log(line);
+            if (!lowerStr.includes('--')) {
+                const line = 'ID: ' + check.id + ' ' + check.method.toUpperCase() + ' ' + check.protocol +  '://' + check.url + ' ' + checkStateUnknown;
+                console.log(line);
+            }
         }
     } catch (error) {
         console.error('sorry something went wrong:', error);
     }
 };
 
-responders.moreCheckInfo = (str) => {
-    console.log('you asked for moreCheckInfo!', str);
+responders.moreCheckInfo = (cli, str) => {
+    // get the id from the str
+    const array = str.split('--');
+
+    const checkId = typeof array[1] === 'string' && array[1].trim().length > 0 ? array[1].trim() : undefined;
+
+    if (!checkId) {
+        return;
+    }
+
+    const check = _data.read('checks', checkId);
+
+    if (!check) {
+        console.error(`the check ${checkId} does not exist.`);
+        return;
+    }
+
+    // print the JSON
+    cli.verticalSpace(1);
+
+    console.dir(check, {
+        colors: true
+    });
+
+    cli.verticalSpace(1);
 };
 
-responders.listLogs = () => {
-    console.log('you asked for listLogs!');
+responders.listLogs = (cli) => {
+    try {
+        const logIds = _logs.list(true);
+        
+        cli.verticalSpace(1);
+
+        for (const logFileName of logIds) {
+            if (logFileName.includes('-')) {
+                console.log(logFileName);
+                cli.verticalSpace(1);
+            }
+        }
+    } catch (error) {
+        console.error('sorry, something went wrong:', error);
+    }
 };
 
 responders.moreLogInfo = (str) => {

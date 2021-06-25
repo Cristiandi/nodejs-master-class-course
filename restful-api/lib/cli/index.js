@@ -83,11 +83,11 @@ e.on('list checks', str => {
 });
 
 e.on('more check info', str => {
-    responders.moreCheckInfo(str);
+    responders.moreCheckInfo(cli, str);
 });
 
 e.on('list logs', str => {
-    responders.listLogs();
+    responders.listLogs(cli);
 });
 
 e.on('more log info', str => {
