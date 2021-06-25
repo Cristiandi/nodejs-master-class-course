@@ -69,7 +69,7 @@ lib.compress = (logId, newLogId) => {
 lib.decompress = (logId) => {
     const fileName = logId + '.gz.b64';
 
-    const fileContent = fs.readFileSync(fileName, 'utf-8');
+    const fileContent = fs.readFileSync(lib.baseDir + '/' + fileName, 'utf-8');
 
     const inputBuffer = Buffer.from(fileContent, 'base64');
 

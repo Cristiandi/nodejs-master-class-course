@@ -3,6 +3,7 @@ const v8 = require('v8');
 
 const _data = require('../data');
 const _logs = require('../logs');
+const helpers = require('../helpers');
 
 // responder object
 const responders = {};
@@ -31,17 +32,17 @@ responders.help = (cli) => {
         if (Object.hasOwnProperty.call(commands, key)) {
             const value = commands[key];
 
-            let line = '\x1b[33m' + key + '\x1b[0m' 
+            let line = '\x1b[33m' + key + '\x1b[0m'
             const padding = 60 - line.length;
 
             for (let i = 0; i < padding; i++) {
-                line += ' ';                
+                line += ' ';
             }
 
             line += value;
 
             console.log(line);
-            cli.verticalSpace(1);            
+            cli.verticalSpace(1);
         }
     }
 
@@ -79,17 +80,17 @@ responders.stats = (cli) => {
         if (Object.hasOwnProperty.call(stats, key)) {
             const value = stats[key];
 
-            let line = '\x1b[33m' + key + '\x1b[0m' 
+            let line = '\x1b[33m' + key + '\x1b[0m'
             const padding = 60 - line.length;
 
             for (let i = 0; i < padding; i++) {
-                line += ' ';                
+                line += ' ';
             }
 
             line += value;
 
             console.log(line);
-            cli.verticalSpace(1);            
+            cli.verticalSpace(1);
         }
     }
 
@@ -101,7 +102,7 @@ responders.stats = (cli) => {
 responders.listUsers = (cli) => {
     try {
         const userIds = _data.list('users');
-        
+
         cli.verticalSpace(1);
 
         for (const userId of userIds) {
@@ -166,15 +167,15 @@ responders.listCheck = (cli, str) => {
             const checkState = typeof check.state === 'string' ? check.state : 'down';
             const checkStateUnknown = typeof check.state === 'string' ? check.state : 'unknown';
 
-            if (lowerStr.includes('--'+checkState)) {
-                const line = 'ID: ' + check.id + ' ' + check.method.toUpperCase() + ' ' + check.protocol +  '://' + check.url + ' ' + checkStateUnknown;
+            if (lowerStr.includes('--' + checkState)) {
+                const line = 'ID: ' + check.id + ' ' + check.method.toUpperCase() + ' ' + check.protocol + '://' + check.url + ' ' + checkStateUnknown;
                 console.log(line);
 
                 continue;
             }
 
             if (!lowerStr.includes('--')) {
-                const line = 'ID: ' + check.id + ' ' + check.method.toUpperCase() + ' ' + check.protocol +  '://' + check.url + ' ' + checkStateUnknown;
+                const line = 'ID: ' + check.id + ' ' + check.method.toUpperCase() + ' ' + check.protocol + '://' + check.url + ' ' + checkStateUnknown;
                 console.log(line);
             }
         }
@@ -213,7 +214,7 @@ responders.moreCheckInfo = (cli, str) => {
 responders.listLogs = (cli) => {
     try {
         const logIds = _logs.list(true);
-        
+
         cli.verticalSpace(1);
 
         for (const logFileName of logIds) {
@@ -227,8 +228,37 @@ responders.listLogs = (cli) => {
     }
 };
 
-responders.moreLogInfo = (str) => {
-    console.log('you asked for moreLogInfo!', str);
+responders.moreLogInfo = (cli, str) => {
+    try {
+        // get the id from the str
+        const array = str.split('--');
+
+        const logId = typeof array[1] === 'string' && array[1].trim().length > 0 ? array[1].trim() : undefined;
+
+        if (!logId) {
+            return;
+        }
+
+        cli.verticalSpace(1);
+
+        const strData = _logs.decompress(logId);
+
+        const lines = strData.split('\n');
+
+        for (const line of lines) {
+            const logObject = helpers.parseJsonToObject(line);
+
+            if (!logObject) {
+                return;
+            }
+
+            console.dir(logObject, { colors: true });
+
+            cli.verticalSpace(1);
+        }
+    } catch (error) {
+        console.error('sorry, something went wrong:', error);
+    }
 };
 
 

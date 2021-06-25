@@ -91,7 +91,7 @@ e.on('list logs', str => {
 });
 
 e.on('more log info', str => {
-    responders.moreLogInfo(str);
+    responders.moreLogInfo(cli, str);
 });
 
 // input processor
