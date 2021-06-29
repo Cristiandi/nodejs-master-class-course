@@ -126,4 +126,11 @@ accountHandlers(handlers);
 
 sessionsHandlers(handlers);
 
+// Example error
+handlers.exampleError = (data, callback) => {
+    const error = new Error('This is an example error.');
+
+    throw error;
+};
+
 module.exports = handlers;

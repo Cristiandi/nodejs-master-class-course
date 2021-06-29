@@ -37,7 +37,8 @@ server.router = {
     'api/hello': handlers.hello,
     'api/users': handlers.users,
     'api/tokens': handlers.tokens,
-    'api/checks': handlers.checks
+    'api/checks': handlers.checks,
+    'examples/error': handlers.exampleError,
 };
 
 // all the server logic
@@ -98,58 +99,77 @@ server.unifiedServer = async (req, res, httpString = 'http') => {
     };
 
     // route the request to the handler specified in the router
-    chosenHandler(data, (statusCode, payload, contentType = 'json') => {
-        contentType = typeof contentType === 'string' ? contentType : 'json';
+    try {
+        chosenHandler(data, (statusCode, payload, contentType = 'json') => {
+            server.processHandlerResponse(res, method, trimmedPath, statusCode, payload, contentType);
+        });
+    } catch (error) {
+        debug(error);
+        server.processHandlerResponse(
+            res,
+            method,
+            trimmedPath,
+            500,
+            {
+                error: 'an unkown error has occured'
+            },
+            'json',
+        );
+    }
+};
 
-        statusCode = typeof statusCode === 'number' ? statusCode : 200;
+//
+server.processHandlerResponse = (res, method, trimmedPath, statusCode, payload, contentType) => {
+    contentType = typeof contentType === 'string' ? contentType : 'json';
 
-        let payloadToResponse = '';
+    statusCode = typeof statusCode === 'number' ? statusCode : 200;
 
-        if (contentType === 'json') {
-            res.setHeader('Content-Type', 'application/json');
+    let payloadToResponse = '';
 
-            payload = typeof payload === 'object' ? payload : {};
+    if (contentType === 'json') {
+        res.setHeader('Content-Type', 'application/json');
 
-            // convert the payload to a string
-            payloadToResponse = JSON.stringify(payload);
-        } else  if (contentType === 'html') {
-            res.setHeader('Content-Type', 'text/html');
+        payload = typeof payload === 'object' ? payload : {};
 
-            payloadToResponse = typeof payload === 'string' ? payload : '';
-        } else  if (contentType === 'favicon') {
-            res.setHeader('Content-Type', 'image/x-icon');
+        // convert the payload to a string
+        payloadToResponse = JSON.stringify(payload);
+    } else if (contentType === 'html') {
+        res.setHeader('Content-Type', 'text/html');
 
-            payloadToResponse = typeof payload !== 'undefined' ? payload : '';
-        } else  if (contentType === 'css') {
-            
-            res.setHeader('Content-Type', 'text/css');
+        payloadToResponse = typeof payload === 'string' ? payload : '';
+    } else if (contentType === 'favicon') {
+        res.setHeader('Content-Type', 'image/x-icon');
 
-            payloadToResponse = typeof payload !== 'undefined' ? payload : '';
-        } else  if (contentType === 'png') {
-            res.setHeader('Content-Type', 'image/png');
+        payloadToResponse = typeof payload !== 'undefined' ? payload : '';
+    } else if (contentType === 'css') {
 
-            payloadToResponse = typeof payload !== 'undefined' ? payload : '';
-        } else  if (contentType === 'jpg') {
-            res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Content-Type', 'text/css');
 
-            payloadToResponse = typeof payload !== 'undefined' ? payload : '';
-        } else  if (contentType === 'plain') {
-            res.setHeader('Content-Type', 'text/plain');
+        payloadToResponse = typeof payload !== 'undefined' ? payload : '';
+    } else if (contentType === 'png') {
+        res.setHeader('Content-Type', 'image/png');
 
-            payloadToResponse = typeof payload !== 'undefined' ? payload : '';
-        }
+        payloadToResponse = typeof payload !== 'undefined' ? payload : '';
+    } else if (contentType === 'jpg') {
+        res.setHeader('Content-Type', 'image/jpeg');
 
-        // return the response 
-        res.writeHead(statusCode);
-        res.end(payloadToResponse);
+        payloadToResponse = typeof payload !== 'undefined' ? payload : '';
+    } else if (contentType === 'plain') {
+        res.setHeader('Content-Type', 'text/plain');
 
-        // log
-        if (`${statusCode}`.startsWith('2')) {
-            debug('\x1b[32m%s\x1b[0m', `${method.toUpperCase()} / ${trimmedPath} ${statusCode}`, payloadToResponse);
-        } else {
-            debug('\x1b[32m%s\x1b[0m', `${method.toUpperCase()} / ${trimmedPath} ${statusCode}`, payloadToResponse);
-        }
-    });
+        payloadToResponse = typeof payload !== 'undefined' ? payload : '';
+    }
+
+    // return the response 
+    res.writeHead(statusCode);
+    res.end(payloadToResponse);
+
+    // log
+    if (`${statusCode}`.startsWith('2')) {
+        debug('\x1b[32m%s\x1b[0m', `${method.toUpperCase()} / ${trimmedPath} ${statusCode}`, payloadToResponse);
+    } else {
+        debug('\x1b[32m%s\x1b[0m', `${method.toUpperCase()} / ${trimmedPath} ${statusCode}`, payloadToResponse);
+    }
 };
 
 // instantiate the http server
