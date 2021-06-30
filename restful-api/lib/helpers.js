@@ -227,4 +227,7 @@ helpers.getStaticAsset = (fileName) => {
     return content;
 };
 
+// sample
+helpers.getANumber = () => 1;
+
 module.exports = helpers;
