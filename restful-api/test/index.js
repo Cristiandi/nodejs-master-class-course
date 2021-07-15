@@ -1,40 +1,14 @@
 // test runner
-const asser = require('assert');
 
-const helpers = require('../lib/helpers');
 
 // application logic for the test runner
 _app = {};
 
 // container for the test
-_app.tests = {
-    unit: {}
-};
+_app.tests = {};
 
-// assert that getANumber
-_app.tests.unit['helpers.getANumber should return 1'] = function(done) {
-    const val = helpers.getANumber();
+_app.tests.unit = require('./unit');
 
-    asser.strictEqual(val, 1);
-
-    done();
-};
-
-_app.tests.unit['helpers.getANumber should return a number'] = function(done) {
-    const val = helpers.getANumber();
-
-    asser.strictEqual(typeof val, 'number');
-
-    done();
-};
-
-_app.tests.unit['helpers.getANumber should return 2'] = function(done) {
-    const val = helpers.getANumber();
-
-    asser.strictEqual(val, 2);
-
-    done();
-};
 
 // count all the tests
 _app.countTests = () => {
