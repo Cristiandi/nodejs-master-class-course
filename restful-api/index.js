@@ -9,15 +9,19 @@ const workers = require('./workers');
 // create app
 const app = {}; 
 
-app.init = () => {
+app.init = (callback) => {
     // start server
     server.init();
 
     // start workers
     workers.init();
+
+    callback();
 };
 
 // execute
-app.init();
+if (require.main === module) {
+    app.init(function(){});
+}
 
 module.exports = app;
