@@ -1,3 +1,7 @@
+const performance = require('perf_hooks').performance;
+const util = require('util');
+const debug = util.debuglog('performance');
+
 const _data = require('../data');
 const helpers = require('../helpers');
 
@@ -24,6 +28,8 @@ module.exports = (handlers) => {
     // required data: phone, password
     // optional data: none
     handlers._tokens.post = async (data, callback) => {
+        performance.mark('entered function');
+
         try {
             // check
             const phone = typeof data?.payload?.phone === 'string' && data?.payload?.phone.trim().length === 10 ?
@@ -36,19 +42,25 @@ module.exports = (handlers) => {
                 return callback(400, { message: 'missing required fields.' });
             }
 
+            performance.mark('inputs validated');
+
+            performance.mark('begining user lookup');
             // look up for the user
             const user = _data.read('users', phone);
+            performance.mark('user lookup complete');
 
             if (!user) {
                 return callback(404, { message: 'the user does not exist.' });
             }
 
+            performance.mark('begining password hash');
             // hash the sent password n compare it
             const hashedPassword = helpers.hash(password);
 
             if (hashedPassword !== user.hashedPassword) {
                 return callback(401, { message: 'the password is incorrect.' });
             }
+            performance.mark('password hash complete');
 
             // create a new token
             const tokenId = helpers.createRandomString(20);
@@ -58,6 +70,13 @@ module.exports = (handlers) => {
                 userPhone: phone,
                 tokenExpires
             };
+
+            //
+            performance.measure('begining to end', 'entered function', 'password hash complete');
+            performance.measure('validating user input', 'entered function', 'inputs validated');
+
+            // log all the measurements
+            
 
             // store the token
             _data.create('tokens', tokenId, tokenObject);

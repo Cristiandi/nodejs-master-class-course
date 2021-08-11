@@ -14,7 +14,7 @@ app.init = (callback) => {
     server.init();
 
     // start workers
-    // workers.init();
+    workers.init();
 
     callback();
 };
