@@ -1,6 +1,8 @@
 const _data = require('../data');
 const config = require('../config');
 const helpers = require('../helpers');
+const _url = require('url');
+const dns = require('dns');
 
 module.exports = (handlers) => {
     // checks
@@ -42,6 +44,8 @@ module.exports = (handlers) => {
 
             if (data?.payload?.successCodes && typeof data?.payload?.successCodes === 'string') {
                 successCodes = data?.payload?.successCodes.split(',').map(item => parseInt(item, 10));
+            } else {
+                successCodes = data?.payload?.successCodes;
             }
 
             let timeoutSeconds;
@@ -95,6 +99,23 @@ module.exports = (handlers) => {
             // verify the number of checks of the user
             if (userChecks.length >= config.maxChecks) {
                 return callback(412, { message: 'the user already has the maximun number of checks.' });
+            }
+
+            // verify the url
+            const parsedUrl = new URL(protocol + '://' + url);
+            const hostname = typeof parsedUrl.hostname === 'string' && parsedUrl.hostname.length > 0 ? parsedUrl.hostname : undefined;
+
+            try {
+                await new Promise((resolve, reject) => {
+                    dns.resolve(hostname, (error, addresses) => {
+                        if (error) {
+                            return reject(error);
+                        }
+                        resolve(addresses);
+                    })
+                });
+            } catch (error) {
+                return callback(400, { message: 'can not resolve the hostname.' });
             }
 
             // create a random id for the check
