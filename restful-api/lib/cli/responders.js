@@ -1,5 +1,6 @@
 const os = require('os');
 const v8 = require('v8');
+const childProcess = require('child_process');
 
 const _data = require('../data');
 const _logs = require('../logs');
@@ -213,16 +214,20 @@ responders.moreCheckInfo = (cli, str) => {
 
 responders.listLogs = (cli) => {
     try {
-        const logIds = _logs.list(true);
+        const ls = childProcess.spawn('ls', ['./.logs/']);
+        ls.stdout.on('data', (data) => {
+            // explode into separate lines
+            const logIds = data.toString().split('\n');
+            
+            cli.verticalSpace(1);
 
-        cli.verticalSpace(1);
-
-        for (const logFileName of logIds) {
-            if (logFileName.includes('-')) {
-                console.log(logFileName);
-                cli.verticalSpace(1);
+            for (const logFileName of logIds) {
+                if (logFileName.includes('-')) {
+                    console.log(logFileName);
+                    cli.verticalSpace(1);
+                }
             }
-        }
+        });
     } catch (error) {
         console.error('sorry, something went wrong:', error);
     }
